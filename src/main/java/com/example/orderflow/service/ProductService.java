@@ -52,4 +52,8 @@ public class ProductService {
         }
         productRepository.deleteById(id);
     }
+
+    public List<Product> getProductsByPriceRange(Double minPrice, Double maxPrice) {
+        return productRepository.findByPriceBetween(minPrice, maxPrice);
+    }
 }

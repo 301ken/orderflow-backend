@@ -37,6 +37,15 @@ public class GlobalExceptionHandler {
     //Generic exception : 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception ex) {
+        if (ex instanceof java.util.NoSuchElementException || ex.getMessage().contains("not found")) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("timestamp", LocalDateTime.now());
+            body.put("status", HttpStatus.NOT_FOUND.value());
+            body.put("error", "Not Found");
+            body.put("message", ex.getMessage());
+            return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        }
+
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());

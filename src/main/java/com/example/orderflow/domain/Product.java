@@ -1,6 +1,7 @@
 package com.example.orderflow.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class Product {
     @NotBlank(message = "Product name cannot be empty")
     private String name;
 
+    @NotNull(message = "Price cannot be null")
     @Positive(message = "Price must be greater than zero")
-    private double price;
+    private Double price;
 }

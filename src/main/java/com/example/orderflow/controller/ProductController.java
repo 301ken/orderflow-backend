@@ -19,10 +19,16 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final com.example.orderflow.repository.OrderItemRepository orderItemRepository;
 
     //Get all products : 200 OK
     @GetMapping
-    public ResponseEntity<List<Product>> getProducts() {
+    public ResponseEntity<List<Product>> getProducts(
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
+        if (minPrice != null && maxPrice != null) {
+            return ResponseEntity.ok(productService.getProductsByPriceRange(minPrice, maxPrice));
+        }
         return ResponseEntity.ok(productService.getProducts());
     }
 
@@ -51,5 +57,10 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/order-count")
+    public ResponseEntity<Long> getProductOrderCount(@PathVariable Long id) {
+        return ResponseEntity.ok(orderItemRepository.countByProductId(id));
     }
 }
