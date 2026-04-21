@@ -5,6 +5,7 @@ import com.example.orderflow.domain.Order;
 import com.example.orderflow.domain.OrderItem;
 import com.example.orderflow.domain.Product;
 import com.example.orderflow.exception.ProductNotFoundException;
+import com.example.orderflow.repository.ClientRepository;
 import com.example.orderflow.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,16 @@ public class OrderServiceReproductionTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ClientRepository clientRepository;
+
+    private Client createPersistedClient() {
+        Client client = new Client();
+        client.setName("Test Client");
+        client.setEmail("test-client@example.com");
+        return clientRepository.save(client);
+    }
+
     @Test
     public void testCreateOrderWithNullProductPrice() {
         // Save a product to ensure it exists
@@ -35,9 +46,7 @@ public class OrderServiceReproductionTest {
         // Create an order with an item that only has the product ID (simulating a request body)
         Order order = new Order();
         
-        Client client = new Client();
-        client.setId(1L); // Mock client
-        order.setClient(client);
+        order.setClient(createPersistedClient());
 
         OrderItem item = new OrderItem();
         item.setQuantity(2);
@@ -61,9 +70,7 @@ public class OrderServiceReproductionTest {
     @Test
     public void testCreateOrderWithNonExistentProduct() {
         Order order = new Order();
-        Client client = new Client();
-        client.setId(1L);
-        order.setClient(client);
+        order.setClient(createPersistedClient());
 
         OrderItem item = new OrderItem();
         item.setQuantity(1);
@@ -82,9 +89,7 @@ public class OrderServiceReproductionTest {
     @Test
     public void testCreateOrderWithEmptyItems() {
         Order order = new Order();
-        Client client = new Client();
-        client.setId(1L);
-        order.setClient(client);
+        order.setClient(createPersistedClient());
         order.setItems(Collections.emptyList());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {

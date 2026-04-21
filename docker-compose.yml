@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orderflow-postgres
+    environment:
+      POSTGRES_DB: orderflow_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orderflow_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: orderflow-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/orderflow_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      APP_USERNAME: admin
+      APP_PASSWORD: admin123
+      JWT_SECRET: b3JkZXJmbG93LWp3dC1zZWNyZXQtbXVzdC1iZS0zMmJ5dGVzLXNpemVkLTAx
+      JWT_EXPIRATION_SECONDS: 3600
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
