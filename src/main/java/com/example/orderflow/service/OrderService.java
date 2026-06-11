@@ -2,6 +2,7 @@ package com.example.orderflow.service;
 
 import com.example.orderflow.domain.Order;
 import com.example.orderflow.domain.OrderItem;
+import com.example.orderflow.domain.OrderStatus;
 import com.example.orderflow.domain.Product;
 import com.example.orderflow.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -16,6 +17,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductService productService;
+    private final OrderStateMachine orderStateMachine;
+    private final AuditService auditService;
 
     @Transactional
     public Order createOrder(Order order) {
@@ -39,8 +42,12 @@ public class OrderService {
         }
 
         order.setTotalPrice(total);
+        order.setStatus(OrderStatus.CREATED);
 
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        auditService.record("ORDER_CREATED", "Order", saved.getId(),
+                "totalPrice=" + saved.getTotalPrice() + ", items=" + saved.getItems().size());
+        return saved;
     }
 
     public List<Order> getAllOrders() {
@@ -54,5 +61,16 @@ public class OrderService {
 
     public List<Order> getOrdersByClientId(Long clientId) {
         return orderRepository.findByClientId(clientId);
+    }
+
+    @Transactional
+    public Order changeStatus(Long id, OrderStatus target) {
+        Order order = getOrderById(id);
+        OrderStatus current = order.getStatus();
+        orderStateMachine.validateTransition(current, target);
+        order.setStatus(target);
+        Order saved = orderRepository.save(order);
+        auditService.record("ORDER_STATUS_CHANGED", "Order", id, current + " -> " + target);
+        return saved;
     }
 }

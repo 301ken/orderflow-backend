@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -24,10 +26,15 @@ public class JwtService {
     private long jwtExpirationSeconds;
 
     public String generateToken(UserDetails userDetails) {
+        return generateToken(userDetails.getUsername(),
+                userDetails.getAuthorities().stream().map(Object::toString).toList());
+    }
+
+    public String generateToken(String subject, Collection<String> roles) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .claims(Map.of("roles", userDetails.getAuthorities().stream().map(Object::toString).toList()))
-                .subject(userDetails.getUsername())
+                .claims(Map.of("roles", List.copyOf(roles)))
+                .subject(subject)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(jwtExpirationSeconds)))
                 .signWith(getSignInKey())
@@ -36,6 +43,23 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        Object roles = extractClaim(token, claims -> claims.get("roles"));
+        if (roles instanceof Collection<?> collection) {
+            return collection.stream().map(String::valueOf).toList();
+        }
+        return List.of();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

@@ -2,6 +2,8 @@ package com.example.orderflow.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -15,6 +17,10 @@ public class Order {
 
     private double totalPrice;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status = OrderStatus.CREATED;
+
 
     @ManyToOne
     @JoinColumn(name = "client_id")
@@ -22,5 +28,7 @@ public class Order {
 
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<OrderItem> items;
 }

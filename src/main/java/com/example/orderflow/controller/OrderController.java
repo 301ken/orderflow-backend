@@ -1,7 +1,9 @@
 package com.example.orderflow.controller;
 
+import com.example.orderflow.controller.dto.OrderStatusUpdateRequest;
 import com.example.orderflow.domain.Order;
 import com.example.orderflow.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +19,16 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<Order> create(@RequestBody Order order) {
+    public ResponseEntity<Order> create(@Valid @RequestBody Order order) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(orderService.createOrder(order));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Order> updateStatus(@PathVariable Long id,
+                                              @Valid @RequestBody OrderStatusUpdateRequest request) {
+        return ResponseEntity.ok(orderService.changeStatus(id, request.status()));
     }
 
     @GetMapping
