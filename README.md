@@ -11,6 +11,7 @@ Production-style Spring Boot REST API modelling a banking order-processing workf
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+- [Architecture at a Glance](#architecture-at-a-glance)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run Locally (No Setup)](#run-locally-no-setup)
@@ -82,6 +83,24 @@ The API starts on **`http://localhost:8080`**.
 | Build | Maven 3.9+ (wrapper included) |
 | Testing | JUnit 5, Spring Test, MockMvc |
 | Packaging | Docker + Docker Compose |
+
+---
+
+## Architecture at a Glance
+
+A layered Spring Boot service — requests pass through a JWT security filter, into thin controllers, down to services that hold the business logic and transactions, and out to Spring Data JPA repositories. External integrations (Stripe, Firebase, AWS S3) sit behind interfaces with safe local fallbacks.
+
+![Layered architecture](docs/diagrams/layered-architecture.png)
+
+The **order lifecycle** is the heart of the system — an explicit state machine that rejects illegal transitions (e.g. `CREATED → COMPLETED` skipping payment):
+
+![Order lifecycle](docs/diagrams/order-lifecycle.png)
+
+Payment is **asynchronous**, confirmed later by a **signature-verified Stripe webhook**:
+
+![Payment flow](docs/diagrams/payment-flow.png)
+
+A full diagram set (with editable Mermaid sources) lives in **[DIAGRAMS.md](DIAGRAMS.md)**.
 
 ---
 
